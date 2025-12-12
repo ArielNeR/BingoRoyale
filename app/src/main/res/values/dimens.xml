@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_md">16dp</dimen>
+    <dimen name="spacing_lg">24dp</dimen>
+    <dimen name="spacing_xl">32dp</dimen>
+
+    <dimen name="corner_radius_sm">8dp</dimen>
+    <dimen name="corner_radius_md">16dp</dimen>
+    <dimen name="corner_radius_lg">24dp</dimen>
+    <dimen name="corner_radius_xl">32dp</dimen>
+
+    <dimen name="ball_size_large">120dp</dimen>
+    <dimen name="ball_size_medium">56dp</dimen>
+    <dimen name="ball_size_small">40dp</dimen>
+
+    <dimen name="bingo_cell_size">56dp</dimen>
+
+    <dimen name="text_title">24sp</dimen>
+    <dimen name="text_large">20sp</dimen>
+    <dimen name="text_medium">16sp</dimen>
+    <dimen name="text_small">14sp</dimen>
+    <dimen name="text_xs">12sp</dimen>
+</resources>
