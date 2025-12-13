@@ -1,34 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Colores principales -->
+    <!-- Background -->
     <color name="bg_primary">#0A0A0F</color>
     <color name="bg_secondary">#141420</color>
     <color name="bg_card">#1A1A2E</color>
 
-    <!-- Acentos -->
+    <!-- Accent -->
     <color name="accent_gold">#FFD700</color>
     <color name="accent_red">#E50914</color>
     <color name="accent_orange">#FF6B35</color>
     <color name="accent_green">#00C853</color>
 
-    <!-- Glass effect -->
+    <!-- Glass -->
     <color name="glass">#0DFFFFFF</color>
     <color name="glass_border">#1AFFFFFF</color>
 
-    <!-- Texto -->
+    <!-- Text -->
     <color name="text_primary">#FFFFFF</color>
     <color name="text_secondary">#B0B0B0</color>
     <color name="text_muted">#666666</color>
 
-    <!-- Bolas BINGO -->
+    <!-- Ball B (1-15) Red -->
     <color name="ball_b_start">#EF4444</color>
     <color name="ball_b_end">#B91C1C</color>
+
+    <!-- Ball I (16-30) Orange -->
     <color name="ball_i_start">#F97316</color>
     <color name="ball_i_end">#C2410C</color>
+
+    <!-- Ball N (31-45) Yellow -->
     <color name="ball_n_start">#EAB308</color>
     <color name="ball_n_end">#A16207</color>
+
+    <!-- Ball G (46-60) Green -->
     <color name="ball_g_start">#22C55E</color>
     <color name="ball_g_end">#15803D</color>
+
+    <!-- Ball O (61-75) Blue -->
     <color name="ball_o_start">#3B82F6</color>
     <color name="ball_o_end">#1D4ED8</color>
 </resources>

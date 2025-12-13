@@ -2,18 +2,20 @@ package com.bingoroyale.model
 
 data class CallerGameState(
     val drawnBalls: List<Int> = emptyList(),
-    val remainingBalls: List<Int> = (1..75).toList().shuffled(),
+    val ballsRemaining: Int = 75,
+    val mode: Int = 75,
     val isNetworkActive: Boolean = false,
-    val connectedPlayers: Int = 0
+    val connectedPlayers: Int = 0,
+    val bingoCalledBy: String? = null // Nombre del jugador que cantó BINGO
 ) {
     val currentBall: Int? get() = drawnBalls.lastOrNull()
-    val ballsRemaining: Int get() = remainingBalls.size
-    val isGameFinished: Boolean get() = remainingBalls.isEmpty()
+    val isGameFinished: Boolean get() = ballsRemaining == 0
 }
 
 data class PlayerGameState(
-    val card: BingoCard = BingoCard.generate(),
-    val markedCells: Set<Int> = setOf(12), // Centro (FREE) siempre marcado
+    val card: BingoCard = BingoCard.generate(75),
+    val markedCells: Set<Int> = setOf(12), // Centro FREE para modo 75
+    val mode: Int = 75,
     val isConnected: Boolean = false,
     val lastReceivedBall: Int? = null,
     val serverName: String? = null
@@ -21,7 +23,7 @@ data class PlayerGameState(
 
 sealed class NetworkEvent {
     data class BallDrawn(val number: Int) : NetworkEvent()
-    data class PlayerConnected(val count: Int) : NetworkEvent()
-    data class ConnectionLost(val reason: String) : NetworkEvent()
+    data class BingoCalled(val playerName: String) : NetworkEvent()
     object NewGame : NetworkEvent()
+    object Disconnected : NetworkEvent()
 }

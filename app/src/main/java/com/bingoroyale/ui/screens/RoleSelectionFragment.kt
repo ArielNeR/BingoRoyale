@@ -27,32 +27,26 @@ class RoleSelectionFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.cardCaller.setOnClickListener {
-            animateClick(it) {
-                findNavController().navigate(R.id.action_role_to_caller)
-            }
+            animateAndNavigate { findNavController().navigate(R.id.action_role_to_caller) }
         }
 
         binding.cardPlayer.setOnClickListener {
-            animateClick(it) {
-                findNavController().navigate(R.id.action_role_to_player)
-            }
+            animateAndNavigate { findNavController().navigate(R.id.action_role_to_player) }
         }
     }
 
-    private fun animateClick(view: View, action: () -> Unit) {
-        view.animate()
-            .scaleX(0.95f)
-            .scaleY(0.95f)
-            .setDuration(100)
-            .withEndAction {
-                view.animate()
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(100)
-                    .withEndAction { action() }
-                    .start()
+    private fun animateAndNavigate(action: () -> Unit) {
+        view?.animate()
+            ?.scaleX(0.95f)
+            ?.scaleY(0.95f)
+            ?.setDuration(100)
+            ?.withEndAction {
+                view?.animate()
+                    ?.scaleX(1f)
+                    ?.scaleY(1f)
+                    ?.setDuration(100)
+                    ?.withEndAction { action() }
             }
-            .start()
     }
 
     override fun onDestroyView() {

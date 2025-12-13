@@ -13,9 +13,7 @@ class BallHistoryAdapter : ListAdapter<Int, BallHistoryAdapter.BallViewHolder>(B
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BallViewHolder {
         val binding = ItemBallHistoryBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
+            LayoutInflater.from(parent.context), parent, false
         )
         return BallViewHolder(binding)
     }
@@ -24,9 +22,8 @@ class BallHistoryAdapter : ListAdapter<Int, BallHistoryAdapter.BallViewHolder>(B
         holder.bind(getItem(position))
     }
 
-    class BallViewHolder(
-        private val binding: ItemBallHistoryBinding
-    ) : RecyclerView.ViewHolder(binding.root) {
+    class BallViewHolder(private val binding: ItemBallHistoryBinding) :
+        RecyclerView.ViewHolder(binding.root) {
 
         fun bind(number: Int) {
             val letter = BingoCard.getLetterForNumber(number)

@@ -2,117 +2,124 @@ package com.bingoroyale.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.bingoroyale.model.CallerGameState
 import com.bingoroyale.network.BingoServer
-import com.bingoroyale.network.ServerState
-import com.bingoroyale.utils.PreferencesManager
-import com.bingoroyale.utils.SoundManager
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.security.SecureRandom
 
-class CallerViewModel(application: Application) : AndroidViewModel(application) {
+class CallerViewModel(app: Application) : AndroidViewModel(app) {
 
-    private val server = BingoServer(application)
-    private val soundManager = SoundManager(application)
-    private val preferences = PreferencesManager(application)
-    private val secureRandom = SecureRandom()
+    private val server = BingoServer(app)
+    private val random = SecureRandom()
 
-    private val _uiState = MutableStateFlow(CallerUiState())
-    val uiState: StateFlow<CallerUiState> = _uiState.asStateFlow()
+    private val _gameState = MutableLiveData(CallerGameState())
+    val gameState: LiveData<CallerGameState> = _gameState
 
-    val serverState: StateFlow<ServerState> = server.serverState
-    val connectedClients: StateFlow<Int> = server.connectedClients
+    private val _lastDrawnBall = MutableLiveData<Int?>()
+    val lastDrawnBall: LiveData<Int?> = _lastDrawnBall
+
+    private val _bingoNotification = MutableLiveData<String?>()
+    val bingoNotification: LiveData<String?> = _bingoNotification
 
     private var availableBalls = mutableListOf<Int>()
+    private var drawnBalls = mutableListOf<Int>()
+    private var currentMode = 75
 
     init {
-        initGame()
-        soundManager.isSoundEnabled = preferences.isSoundEnabled
-        soundManager.isVibrationEnabled = preferences.isVibrationEnabled
+        initGame(75)
+        observeServer()
     }
 
-    private fun initGame() {
-        val mode = preferences.defaultMode
-        availableBalls = (1..mode).toMutableList()
+    private fun initGame(mode: Int) {
+        currentMode = mode
+        val maxBall = if (mode == 75) 75 else 90
+        availableBalls = (1..maxBall).toMutableList()
         shuffleBalls()
-        _uiState.value = CallerUiState(mode = mode)
+        drawnBalls.clear()
+        _lastDrawnBall.value = null
+        updateState()
     }
 
     private fun shuffleBalls() {
-        // Fisher-Yates shuffle con SecureRandom
         for (i in availableBalls.size - 1 downTo 1) {
-            val j = secureRandom.nextInt(i + 1)
+            val j = random.nextInt(i + 1)
             val temp = availableBalls[i]
             availableBalls[i] = availableBalls[j]
             availableBalls[j] = temp
         }
     }
 
-    fun startServer() {
-        server.start("Bingo Royale", _uiState.value.mode)
+    private fun observeServer() {
+        viewModelScope.launch {
+            server.connectedClients.collect { count ->
+                _gameState.value = _gameState.value?.copy(connectedPlayers = count)
+            }
+        }
+        viewModelScope.launch {
+            server.isActive.collect { active ->
+                _gameState.value = _gameState.value?.copy(isNetworkActive = active)
+            }
+        }
+        viewModelScope.launch {
+            server.bingoEvents.collect { playerName ->
+                _bingoNotification.value = playerName
+                _gameState.value = _gameState.value?.copy(bingoCalledBy = playerName)
+            }
+        }
     }
 
-    fun stopServer() {
-        server.stop()
+    fun drawNextBall() {
+        if (availableBalls.isEmpty()) return
+
+        val ball = availableBalls.removeAt(availableBalls.size - 1)
+        drawnBalls.add(ball)
+        _lastDrawnBall.value = ball
+
+        server.broadcastBall(ball)
+        updateState()
+    }
+
+    fun startNewGame(mode: Int = currentMode) {
+        initGame(mode)
+        server.broadcastNewGame(mode)
     }
 
     fun setMode(mode: Int) {
-        preferences.defaultMode = mode
-        resetGame()
-    }
-
-    fun drawBall() {
-        if (availableBalls.isEmpty()) {
-            _uiState.value = _uiState.value.copy(isGameOver = true)
-            return
-        }
-
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isAnimating = true)
-
-            val ball = availableBalls.removeAt(availableBalls.size - 1)
-
-            val newDrawnBalls = _uiState.value.drawnBalls + ball
-            _uiState.value = _uiState.value.copy(
-                currentBall = ball,
-                drawnBalls = newDrawnBalls,
-                isGameOver = availableBalls.isEmpty()
-            )
-
-            soundManager.playBallSound()
-
-            // Transmitir a jugadores conectados
-            server.broadcastBall(ball)
-
-            delay(500)
-            _uiState.value = _uiState.value.copy(isAnimating = false)
+        if (mode != currentMode) {
+            startNewGame(mode)
         }
     }
 
-    fun resetGame() {
-        val mode = preferences.defaultMode
-        availableBalls = (1..mode).toMutableList()
-        shuffleBalls()
-
-        _uiState.value = CallerUiState(mode = mode)
-        server.broadcastGameReset()
+    fun toggleNetwork() {
+        if (_gameState.value?.isNetworkActive == true) {
+            server.stop()
+        } else {
+            server.start(currentMode)
+        }
     }
+
+    fun clearBingoNotification() {
+        _bingoNotification.value = null
+        _gameState.value = _gameState.value?.copy(bingoCalledBy = null)
+    }
+
+    private fun updateState() {
+        _gameState.value = CallerGameState(
+            drawnBalls = drawnBalls.toList(),
+            ballsRemaining = availableBalls.size,
+            mode = currentMode,
+            isNetworkActive = _gameState.value?.isNetworkActive ?: false,
+            connectedPlayers = _gameState.value?.connectedPlayers ?: 0
+        )
+    }
+
+    fun getServerIp(): String = server.getLocalIpAddress()
 
     override fun onCleared() {
         super.onCleared()
         server.release()
-        soundManager.release()
     }
 }
-
-data class CallerUiState(
-    val mode: Int = 75,
-    val currentBall: Int? = null,
-    val drawnBalls: List<Int> = emptyList(),
-    val isAnimating: Boolean = false,
-    val isGameOver: Boolean = false
-)

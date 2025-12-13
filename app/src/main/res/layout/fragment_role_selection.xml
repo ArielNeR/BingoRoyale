@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.constraintlayout.widget.ConstraintLayout 
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg_gradient"
     android:padding="@dimen/spacing_lg">
 
-    <!-- Logo y título -->
+    <!-- Header Logo -->
     <LinearLayout
         android:id="@+id/header"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center"
+        android:layout_marginTop="@dimen/spacing_xl"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="@dimen/spacing_xl">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <FrameLayout
             android:layout_width="100dp"
@@ -26,8 +26,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@drawable/btn_gold"
-                android:layout_gravity="center" />
+                android:background="@drawable/btn_gold" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -53,7 +52,6 @@
             android:text="Premium Experience"
             android:textColor="@color/text_secondary"
             android:textSize="@dimen/text_small" />
-
     </LinearLayout>
 
     <!-- Pregunta -->
@@ -65,28 +63,30 @@
         android:textColor="@color/text_primary"
         android:textSize="@dimen/text_large"
         android:textStyle="bold"
+        android:layout_marginTop="@dimen/spacing_xl"
         app:layout_constraintTop_toBottomOf="@id/header"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="@dimen/spacing_xl" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Opciones de rol -->
+    <!-- Cards Container -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        android:layout_marginTop="@dimen/spacing_lg"
         app:layout_constraintTop_toBottomOf="@id/tv_question"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="@dimen/spacing_lg">
+        app:layout_constraintVertical_bias="0.3">
 
-        <!-- Botón Cantador -->
+        <!-- Card Cantador -->
         <androidx.cardview.widget.CardView
             android:id="@+id/card_caller"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_md"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
             app:cardBackgroundColor="@android:color/transparent"
             app:cardElevation="0dp"
             app:cardCornerRadius="@dimen/corner_radius_xl">
@@ -137,7 +137,6 @@
                         android:text="@string/role_caller_desc"
                         android:textColor="@color/text_secondary"
                         android:textSize="@dimen/text_small" />
-
                 </LinearLayout>
 
                 <TextView
@@ -146,16 +145,17 @@
                     android:text="→"
                     android:textColor="@color/accent_gold"
                     android:textSize="24sp" />
-
             </LinearLayout>
-
         </androidx.cardview.widget.CardView>
 
-        <!-- Botón Jugador -->
+        <!-- Card Jugador -->
         <androidx.cardview.widget.CardView
             android:id="@+id/card_player"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
             app:cardBackgroundColor="@android:color/transparent"
             app:cardElevation="0dp"
             app:cardCornerRadius="@dimen/corner_radius_xl">
@@ -206,7 +206,6 @@
                         android:text="@string/role_player_desc"
                         android:textColor="@color/text_secondary"
                         android:textSize="@dimen/text_small" />
-
                 </LinearLayout>
 
                 <TextView
@@ -215,11 +214,8 @@
                     android:text="→"
                     android:textColor="@color/accent_gold"
                     android:textSize="24sp" />
-
             </LinearLayout>
-
         </androidx.cardview.widget.CardView>
-
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

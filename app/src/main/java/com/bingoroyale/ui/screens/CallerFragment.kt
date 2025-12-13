@@ -4,14 +4,10 @@ import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.os.VibratorManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AnimationUtils
-import android.widget.FrameLayout
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -28,7 +24,6 @@ class CallerFragment : Fragment() {
 
     private var _binding: FragmentCallerBinding? = null
     private val binding get() = _binding!!
-
     private val viewModel: CallerViewModel by viewModels()
     private lateinit var historyAdapter: BallHistoryAdapter
 
@@ -43,28 +38,29 @@ class CallerFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupUI()
         setupRecyclerView()
         observeViewModel()
     }
 
     private fun setupUI() {
-        binding.btnBack.setOnClickListener {
-            showExitConfirmation()
-        }
+        binding.btnBack.setOnClickListener { showExitDialog() }
 
         binding.btnNextBall.setOnClickListener {
             viewModel.drawNextBall()
-            vibrate()
+            vibrate(50)
         }
 
-        binding.btnNewGame.setOnClickListener {
-            showNewGameConfirmation()
-        }
+        binding.btnNewGame.setOnClickListener { showNewGameDialog() }
 
         binding.btnToggleNetwork.setOnClickListener {
             viewModel.toggleNetwork()
+
+            // Mostrar IP cuando se activa
+            if (viewModel.gameState.value?.isNetworkActive == false) {
+                val ip = viewModel.getServerIp()
+                Toast.makeText(requireContext(), "📡 IP: $ip", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
@@ -78,43 +74,59 @@ class CallerFragment : Fragment() {
 
     private fun observeViewModel() {
         viewModel.gameState.observe(viewLifecycleOwner) { state ->
-            // Actualizar contador
-            binding.tvBallsRemaining.text = getString(
-                R.string.balls_remaining,
-                state.ballsRemaining
-            )
-
-            // Actualizar historial
+            binding.tvBallsRemaining.text = getString(R.string.balls_remaining, state.ballsRemaining)
             historyAdapter.submitList(state.drawnBalls.reversed())
 
-            // Estado de red
-            if (state.isNetworkActive) {
-                binding.tvNetworkStatus.text = getString(R.string.network_active)
-                binding.tvNetworkStatus.setTextColor(
-                    ContextCompat.getColor(requireContext(), R.color.accent_green)
-                )
-                binding.btnToggleNetwork.text = "📴 Desactivar"
+            // Network status
+            val isNetworkActive = state.isNetworkActive
+            binding.tvNetworkStatus.text = if (isNetworkActive)
+                getString(R.string.network_active) else getString(R.string.network_inactive)
+            binding.tvNetworkStatus.setTextColor(
+                ContextCompat.getColor(requireContext(),
+                    if (isNetworkActive) R.color.accent_green else R.color.text_secondary)
+            )
+            binding.btnToggleNetwork.text = if (isNetworkActive) "📴 Desactivar" else "🌐 Red Local"
 
-                binding.tvConnectedCount.visibility = View.VISIBLE
-                binding.tvConnectedCount.text = "👥 ${state.connectedPlayers}"
-            } else {
-                binding.tvNetworkStatus.text = getString(R.string.network_inactive)
-                binding.tvNetworkStatus.setTextColor(
-                    ContextCompat.getColor(requireContext(), R.color.text_secondary)
-                )
-                binding.btnToggleNetwork.text = "🌐 Red Local"
-                binding.tvConnectedCount.visibility = View.GONE
-            }
+            // Connected players
+            binding.tvConnectedCount.visibility = if (isNetworkActive) View.VISIBLE else View.GONE
+            binding.tvConnectedCount.text = "👥 ${state.connectedPlayers}"
 
-            // Desactivar botón si no hay más bolas
+            // Disable button when no balls left
             binding.btnNextBall.isEnabled = !state.isGameFinished
-            binding.btnNextBall.alpha = if (state.isGameFinished) 0.5f else 1f
+            if (state.isGameFinished) {
+                binding.btnNextBall.text = "✅ PARTIDA TERMINADA"
+            } else {
+                binding.btnNextBall.text = "🎱  SIGUIENTE NÚMERO"
+            }
         }
 
         viewModel.lastDrawnBall.observe(viewLifecycleOwner) { ball ->
             updateCurrentBall(ball)
-            updateLastBalls()
         }
+
+        // Notificación cuando alguien canta BINGO
+        viewModel.bingoNotification.observe(viewLifecycleOwner) { playerName ->
+            if (playerName != null) {
+                showBingoNotification(playerName)
+                viewModel.clearBingoNotification()
+            }
+        }
+    }
+
+    private fun showBingoNotification(playerName: String) {
+        vibrate(longArrayOf(0, 200, 100, 200, 100, 400))
+
+        AlertDialog.Builder(requireContext(), R.style.BingoDialogTheme)
+            .setTitle("🎉 ¡BINGO!")
+            .setMessage("$playerName ha cantado BINGO.\n\n¿Verificar y confirmar?")
+            .setPositiveButton("✅ Confirmar") { _, _ ->
+                Toast.makeText(requireContext(), "BINGO confirmado para $playerName", Toast.LENGTH_LONG).show()
+            }
+            .setNegativeButton("❌ Rechazar") { _, _ ->
+                Toast.makeText(requireContext(), "BINGO rechazado", Toast.LENGTH_SHORT).show()
+            }
+            .setCancelable(false)
+            .show()
     }
 
     private fun updateCurrentBall(ball: Int?) {
@@ -129,7 +141,6 @@ class CallerFragment : Fragment() {
         binding.tvBallLetter.text = letter
         binding.tvBallNumber.text = ball.toString()
 
-        // Background según letra
         val bgRes = when (letter) {
             "B" -> R.drawable.bg_ball_b
             "I" -> R.drawable.bg_ball_i
@@ -140,115 +151,50 @@ class CallerFragment : Fragment() {
         }
         binding.ballBackground.setBackgroundResource(bgRes)
 
-        // Animación
-        val bounceAnim = AnimationUtils.loadAnimation(requireContext(), R.anim.ball_pop)
-        binding.ballContainer.startAnimation(bounceAnim)
+        // Animation
+        binding.ballBackground.scaleX = 0.5f
+        binding.ballBackground.scaleY = 0.5f
+        binding.ballBackground.animate()
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(300)
+            .start()
     }
 
-    private fun updateLastBalls() {
-        val drawnBalls = viewModel.gameState.value?.drawnBalls ?: return
-        val lastFive = drawnBalls.takeLast(5).reversed().drop(1) // Sin la actual
-
-        binding.lastBallsContainer.removeAllViews()
-
-        if (lastFive.isEmpty()) {
-            val textView = TextView(requireContext()).apply {
-                text = "Aparecerán aquí"
-                setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted))
-                textSize = 12f
-            }
-            binding.lastBallsContainer.addView(textView)
-            return
-        }
-
-        lastFive.forEachIndexed { index, ball ->
-            val ballView = createSmallBallView(ball, index)
-            binding.lastBallsContainer.addView(ballView)
-        }
-    }
-
-    private fun createSmallBallView(ball: Int, index: Int): View {
-        val size = resources.getDimensionPixelSize(R.dimen.ball_size_small)
-        val margin = 4
-
-        val container = FrameLayout(requireContext()).apply {
-            layoutParams = LinearLayout.LayoutParams(size, size).apply {
-                marginStart = margin
-                marginEnd = margin
-            }
-            alpha = 1f - (index * 0.15f)
-        }
-
-        val background = View(requireContext()).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-            val letter = BingoCard.getLetterForNumber(ball)
-            val bgRes = when (letter) {
-                "B" -> R.drawable.bg_ball_b
-                "I" -> R.drawable.bg_ball_i
-                "N" -> R.drawable.bg_ball_n
-                "G" -> R.drawable.bg_ball_g
-                "O" -> R.drawable.bg_ball_o
-                else -> R.drawable.bg_ball_empty
-            }
-            setBackgroundResource(bgRes)
-        }
-
-        val textView = TextView(requireContext()).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-            text = ball.toString()
-            textSize = 12f
-            setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
-            gravity = android.view.Gravity.CENTER
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-        }
-
-        container.addView(background)
-        container.addView(textView)
-
-        return container
-    }
-
-    private fun vibrate() {
-        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val manager = requireContext().getSystemService(VibratorManager::class.java)
-            manager?.defaultVibrator
-        } else {
-            @Suppress("DEPRECATION")
-            requireContext().getSystemService(Vibrator::class.java)
-        }
-
+    private fun vibrate(duration: Long) {
+        val vibrator = requireContext().getSystemService(Vibrator::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+            vibrator?.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
             @Suppress("DEPRECATION")
-            vibrator?.vibrate(50)
+            vibrator?.vibrate(duration)
         }
     }
 
-    private fun showNewGameConfirmation() {
+    private fun vibrate(pattern: LongArray) {
+        val vibrator = requireContext().getSystemService(Vibrator::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator?.vibrate(VibrationEffect.createWaveform(pattern, -1))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator?.vibrate(pattern, -1)
+        }
+    }
+
+    private fun showNewGameDialog() {
         AlertDialog.Builder(requireContext(), R.style.AlertDialogTheme)
             .setTitle("🔄 Nueva Partida")
-            .setMessage("¿Iniciar una nueva partida? Se reiniciarán todas las bolas.")
-            .setPositiveButton("Iniciar") { _, _ ->
-                viewModel.startNewGame()
-            }
+            .setMessage("¿Iniciar una nueva partida?\nSe reiniciarán todas las bolas.")
+            .setPositiveButton("Iniciar") { _, _ -> viewModel.startNewGame() }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
-    private fun showExitConfirmation() {
+    private fun showExitDialog() {
         AlertDialog.Builder(requireContext(), R.style.AlertDialogTheme)
             .setTitle("🚪 Salir")
-            .setMessage("¿Deseas salir del modo cantador?")
-            .setPositiveButton("Salir") { _, _ ->
-                findNavController().navigateUp()
-            }
+            .setMessage("¿Deseas salir del modo cantador?\nLos jugadores serán desconectados.")
+            .setPositiveButton("Salir") { _, _ -> findNavController().navigateUp() }
             .setNegativeButton("Cancelar", null)
             .show()
     }

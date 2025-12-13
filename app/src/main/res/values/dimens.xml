@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Spacing -->
     <dimen name="spacing_xs">4dp</dimen>
     <dimen name="spacing_sm">8dp</dimen>
     <dimen name="spacing_md">16dp</dimen>
     <dimen name="spacing_lg">24dp</dimen>
     <dimen name="spacing_xl">32dp</dimen>
-
-    <dimen name="corner_radius_sm">8dp</dimen>
-    <dimen name="corner_radius_md">16dp</dimen>
-    <dimen name="corner_radius_lg">24dp</dimen>
-    <dimen name="corner_radius_xl">32dp</dimen>
-
-    <dimen name="ball_size_large">120dp</dimen>
-    <dimen name="ball_size_medium">56dp</dimen>
-    <dimen name="ball_size_small">40dp</dimen>
-
-    <dimen name="bingo_cell_size">56dp</dimen>
-
-    <dimen name="text_title">24sp</dimen>
-    <dimen name="text_large">20sp</dimen>
+    
+    <!-- Text sizes -->
+    <dimen name="text_xs">10sp</dimen>
+    <dimen name="text_small">12sp</dimen>
     <dimen name="text_medium">16sp</dimen>
-    <dimen name="text_small">14sp</dimen>
-    <dimen name="text_xs">12sp</dimen>
+    <dimen name="text_large">20sp</dimen>
+    <dimen name="text_xl">28sp</dimen>
+    
+    <!-- Ball sizes -->
+    <dimen name="ball_size_small">36dp</dimen>
+    <dimen name="ball_size_medium">48dp</dimen>
+    <dimen name="ball_size_large">120dp</dimen>
+    
+    <!-- Corner radius -->
+    <dimen name="corner_radius_sm">8dp</dimen>
+    <dimen name="corner_radius_md">12dp</dimen>
+    <dimen name="corner_radius_lg">16dp</dimen>
+    <dimen name="corner_radius_xl">24dp</dimen>
 </resources>

@@ -1,37 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Bingo Royale</string>
-
-    <!-- Selección de rol -->
     <string name="select_role">¿Cómo quieres jugar?</string>
-    <string name="role_caller">🎤 Cantador</string>
     <string name="role_caller_desc">Canta los números para los jugadores</string>
-    <string name="role_player">🎮 Jugador</string>
     <string name="role_player_desc">Juega con tu cartón de bingo</string>
-
-    <!-- Cantador -->
     <string name="next_ball">SIGUIENTE NÚMERO</string>
     <string name="balls_remaining">Bolas restantes: %d</string>
-    <string name="history">Historial</string>
-    <string name="new_game">Nueva Partida</string>
-    <string name="share_network">Compartir en Red</string>
     <string name="network_active">🌐 Red Activa</string>
     <string name="network_inactive">📴 Sin Red</string>
-    <string name="connected_players">Jugadores: %d</string>
-
-    <!-- Jugador -->
-    <string name="your_card">Tu Cartón</string>
-    <string name="bingo_button">¡BINGO!</string>
-    <string name="new_card">Nuevo Cartón</string>
-    <string name="connect_network">Conectar a Red</string>
+    <string name="connected_to">Conectado a: %s</string>
     <string name="offline_mode">Modo Offline</string>
     <string name="searching">Buscando cantador…</string>
-    <string name="connected_to">Conectado a: %s</string>
-    <string name="last_ball">Última bola: %s</string>
-
-    <!-- General -->
-    <string name="confirm">Confirmar</string>
-    <string name="cancel">Cancelar</string>
-    <string name="exit">Salir</string>
-    <string name="settings">Configuración</string>
 </resources>

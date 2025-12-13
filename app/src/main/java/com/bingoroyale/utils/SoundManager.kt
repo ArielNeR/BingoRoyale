@@ -7,48 +7,30 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import com.bingoroyale.R
 
 class SoundManager(private val context: Context) {
 
     private var soundPool: SoundPool? = null
-    private var soundBall: Int = 0
-    private var soundMark: Int = 0
-    private var soundLine: Int = 0
-    private var soundBingo: Int = 0
-    private var soundClick: Int = 0
-
     private var vibrator: Vibrator? = null
 
     var isSoundEnabled = true
     var isVibrationEnabled = true
 
-    init {
-        initSoundPool()
-        initVibrator()
-    }
+    private var ballSoundId: Int = 0
+    private var bingoSoundId: Int = 0
 
-    private fun initSoundPool() {
-        val attributes = AudioAttributes.Builder()
+    init {
+        val audioAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_GAME)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
 
         soundPool = SoundPool.Builder()
             .setMaxStreams(5)
-            .setAudioAttributes(attributes)
+            .setAudioAttributes(audioAttributes)
             .build()
 
-        soundPool?.let { pool ->
-            soundBall = pool.load(context, R.raw.ball_draw, 1)
-            soundMark = pool.load(context, R.raw.cell_mark, 1)
-            soundLine = pool.load(context, R.raw.line_complete, 1)
-            soundBingo = pool.load(context, R.raw.bingo_win, 1)
-            soundClick = pool.load(context, R.raw.button_click, 1)
-        }
-    }
-
-    private fun initVibrator() {
+        // Obtener Vibrator
         vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
             vibratorManager.defaultVibrator
@@ -56,76 +38,51 @@ class SoundManager(private val context: Context) {
             @Suppress("DEPRECATION")
             context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         }
+
+        // Nota: En producción, cargarías los sonidos desde res/raw
+        // ballSoundId = soundPool?.load(context, R.raw.ball_sound, 1) ?: 0
+        // bingoSoundId = soundPool?.load(context, R.raw.bingo_sound, 1) ?: 0
     }
 
     fun playBallSound() {
-        if (isSoundEnabled) {
-            soundPool?.play(soundBall, 1f, 1f, 1, 0, 1f)
+        if (isSoundEnabled && ballSoundId != 0) {
+            soundPool?.play(ballSoundId, 1f, 1f, 1, 0, 1f)
         }
-        vibrateShort()
-    }
 
-    fun playMarkSound() {
-        if (isSoundEnabled) {
-            soundPool?.play(soundMark, 0.7f, 0.7f, 1, 0, 1f)
+        if (isVibrationEnabled) {
+            vibrate(30)
         }
-        vibrateShort()
-    }
-
-    fun playLineSound() {
-        if (isSoundEnabled) {
-            soundPool?.play(soundLine, 1f, 1f, 1, 0, 1f)
-        }
-        vibrateMedium()
     }
 
     fun playBingoSound() {
-        if (isSoundEnabled) {
-            soundPool?.play(soundBingo, 1f, 1f, 1, 0, 1f)
+        if (isSoundEnabled && bingoSoundId != 0) {
+            soundPool?.play(bingoSoundId, 1f, 1f, 1, 0, 1f)
         }
-        vibrateLong()
-    }
 
-    fun playClickSound() {
-        if (isSoundEnabled) {
-            soundPool?.play(soundClick, 0.5f, 0.5f, 1, 0, 1f)
+        if (isVibrationEnabled) {
+            vibrate(longArrayOf(0, 100, 50, 100, 50, 200))
         }
     }
 
-    private fun vibrateShort() {
+    fun vibrate(duration: Long) {
         if (!isVibrationEnabled) return
-        vibrate(30)
-    }
 
-    private fun vibrateMedium() {
-        if (!isVibrationEnabled) return
-        vibrate(100)
-    }
-
-    private fun vibrateLong() {
-        if (!isVibrationEnabled) return
-        vibratePattern(longArrayOf(0, 100, 50, 100, 50, 200))
-    }
-
-    private fun vibrate(duration: Long) {
-        vibrator?.let {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                it.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
-            } else {
-                @Suppress("DEPRECATION")
-                it.vibrate(duration)
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator?.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator?.vibrate(duration)
         }
     }
 
-    private fun vibratePattern(pattern: LongArray) {
-        vibrator?.let {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                it.vibrate(VibrationEffect.createWaveform(pattern, -1))
-            } else {
-                @Suppress("DEPRECATION")
-                it.vibrate(pattern, -1)
-            }
+    fun vibrate(pattern: LongArray) {
+        if (!isVibrationEnabled) return
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator?.vibrate(VibrationEffect.createWaveform(pattern, -1))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator?.vibrate(pattern, -1)
         }
     }
 

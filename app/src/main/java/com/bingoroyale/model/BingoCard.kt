@@ -2,100 +2,97 @@ package com.bingoroyale.model
 
 import java.security.SecureRandom
 
-/**
- * Representa un cartón de bingo de 5x5 (75 bolas)
- * Columna B: 1-15
- * Columna I: 16-30
- * Columna N: 31-45 (centro es FREE)
- * Columna G: 46-60
- * Columna O: 61-75
- */
 data class BingoCard(
-    val cells: Array<IntArray> = Array(5) { IntArray(5) }
+    val mode: Int = 75,
+    val cells: Array<IntArray>
 ) {
     companion object {
-        private val secureRandom = SecureRandom()
+        private val random = SecureRandom()
 
-        fun generate(): BingoCard {
-            val card = BingoCard()
-            val ranges = arrayOf(
-                1..15,   // B
-                16..30,  // I
-                31..45,  // N
-                46..60,  // G
-                61..75   // O
+        fun generate(mode: Int = 75): BingoCard {
+            return if (mode == 75) generate75() else generate90()
+        }
+
+        private fun generate75(): BingoCard {
+            // 5x5 grid, almacenado como columns[col][row]
+            val cells = Array(5) { IntArray(5) }
+            val ranges = arrayOf(1..15, 16..30, 31..45, 46..60, 61..75)
+
+            for (col in 0..4) {
+                val available = ranges[col].shuffled(random).toMutableList()
+                for (row in 0..4) {
+                    cells[col][row] = if (col == 2 && row == 2) 0 else available.removeAt(0)
+                }
+            }
+            return BingoCard(mode = 75, cells = cells)
+        }
+
+        private fun generate90(): BingoCard {
+            // 3 filas x 9 columnas
+            // Cada fila tiene 5 números y 4 espacios vacíos (-1)
+            val cells = Array(3) { IntArray(9) { -1 } }
+
+            // Rangos por columna
+            val columnRanges = arrayOf(
+                (1..9).toMutableList(),
+                (10..19).toMutableList(),
+                (20..29).toMutableList(),
+                (30..39).toMutableList(),
+                (40..49).toMutableList(),
+                (50..59).toMutableList(),
+                (60..69).toMutableList(),
+                (70..79).toMutableList(),
+                (80..90).toMutableList()
             )
 
-            for (col in 0 until 5) {
-                val available = ranges[col].toMutableList()
-                available.shuffle(secureRandom)
+            // Mezclar cada columna
+            columnRanges.forEach { it.shuffle(random) }
 
-                for (row in 0 until 5) {
-                    if (col == 2 && row == 2) {
-                        // Centro es FREE (representado como 0)
-                        card.cells[col][row] = 0
-                    } else {
-                        card.cells[col][row] = available.removeAt(0)
+            // Para cada fila, elegir 5 columnas al azar
+            for (row in 0..2) {
+                val selectedCols = (0..8).shuffled(random).take(5).sorted()
+
+                for (col in selectedCols) {
+                    if (columnRanges[col].isNotEmpty()) {
+                        cells[row][col] = columnRanges[col].removeAt(0)
                     }
                 }
             }
 
-            return card
+            return BingoCard(mode = 90, cells = cells)
         }
 
-        fun getLetterForColumn(col: Int): String {
-            return when (col) {
-                0 -> "B"
-                1 -> "I"
-                2 -> "N"
-                3 -> "G"
-                4 -> "O"
-                else -> ""
-            }
-        }
-
-        fun getLetterForNumber(number: Int): String {
-            return when {
-                number in 1..15 -> "B"
-                number in 16..30 -> "I"
-                number in 31..45 -> "N"
-                number in 46..60 -> "G"
-                number in 61..75 -> "O"
-                else -> ""
-            }
-        }
-
-        fun getColumnForNumber(number: Int): Int {
-            return when {
-                number in 1..15 -> 0
-                number in 16..30 -> 1
-                number in 31..45 -> 2
-                number in 46..60 -> 3
-                number in 61..75 -> 4
-                else -> -1
-            }
+        fun getLetterForNumber(n: Int): String = when {
+            n in 1..15 -> "B"
+            n in 16..30 -> "I"
+            n in 31..45 -> "N"
+            n in 46..60 -> "G"
+            n in 61..75 -> "O"
+            else -> ""
         }
     }
 
-    // Para acceder como lista plana (para el RecyclerView)
+    // Convierte a lista plana para el adapter
     fun toFlatList(): List<Int> {
-        val list = mutableListOf<Int>()
-        for (row in 0 until 5) {
-            for (col in 0 until 5) {
-                list.add(cells[col][row])
+        return if (mode == 75) {
+            // 5x5: leer por filas (row-major)
+            (0..4).flatMap { row ->
+                (0..4).map { col -> cells[col][row] }
             }
+        } else {
+            // 3x9: ya está en formato row-major
+            cells.flatMap { it.toList() }
         }
-        return list
     }
+
+    fun getRows(): Int = if (mode == 75) 5 else 3
+    fun getCols(): Int = if (mode == 75) 5 else 9
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        other as BingoCard
-        return cells.contentDeepEquals(other.cells)
+        if (other !is BingoCard) return false
+        return mode == other.mode && cells.contentDeepEquals(other.cells)
     }
 
-    override fun hashCode(): Int {
-        return cells.contentDeepHashCode()
-    }
+    override fun hashCode(): Int = 31 * mode + cells.contentDeepHashCode()
 }
