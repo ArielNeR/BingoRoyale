@@ -11,9 +11,9 @@ Aplicación móvil de Bingo clásico para Android que permite jugar en red local
 ## 📱 Capturas de Pantalla
 
 <p align="center">
-  <img src="screenshots/home.png" width="200" alt="Pantalla Principal"/>
-  <img src="screenshots/caller.png" width="200" alt="Modo Cantador"/>
-  <img src="screenshots/player.png" width="200" alt="Modo Jugador"/>
+  <img src="captures/pantallaprincipal.jpeg" width="200" alt="Pantalla Principal"/>
+  <img src="captures/modocantador.jpeg" width="200" alt="Modo Cantador"/>
+  <img src="captures/modojugador.jpeg" width="200" alt="Modo Jugador"/>
 </p>
 
 ---
