@@ -54,7 +54,7 @@ Aplicación móvil de Bingo clásico para Android que permite jugar en red local
 
 ### Opción 1: APK
 1. Descarga el APK desde este repositorio:  
-   👉 [Descargar APK](apk/app-debug.apk)
+   👉 [Descargar APK](https://github.com/ArielNeR/BingoRoyale/raw/master/apk/app-debug.apk)
 2. Habilita "Instalar desde fuentes desconocidas" en tu dispositivo
 3. Instala el APK
 
